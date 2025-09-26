@@ -2,11 +2,15 @@ importScripts("https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js")
 importScripts("https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js");
 
 cacheName="timer-app"
-const filestoCache = [
-    "/",
-    "/index.html",
-    "/assets/index-BtnhdoIX.js",
-    "/assets/index-DCfVHZpk.css"
+filestoCache=[
+    "./",                                    
+    "./index.html",
+    "./vite.svg",
+    "./logo192.png",
+    "./assets/index-BtnhdoIX.js",            
+    "./assets/index-DCfVHZpk.css ",           
+    "https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js",
+    "https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js"
 ]
 
 const firebaseConfig = {
@@ -33,27 +37,37 @@ self.addEventListener("activate",()=>{
     console.log("Activated: ")
 })
 
-self.addEventListener("install", (e) => {
-    console.log("SW: Installing...")
+self.addEventListener("install",(e)=>{
+    console.log("Installing: ")
     e.waitUntil(
-        caches.open(cacheName).then((cache) => {
-            console.log("SW: Caching files...")
+        caches.open(cacheName).then((cache)=>{
+            console.log("Adding Files: ")
             return cache.addAll(filestoCache)
-                .then(() => console.log("SW: All files cached!"))
-                .catch(err => console.error("SW: Cache failed:", err))
+                .catch((error) => {                     
+                    console.error("Failed to cache files:", error);
+                    throw error;
+                });
         })
     )
 })
 
-self.addEventListener("fetch", (e) => {
+self.addEventListener("fetch",(e)=>{
+    console.log("Fetching",e.request.url)
+    
+    if (e.request.method !== 'GET') {
+        return;
+    }
+    
     e.respondWith(
-        caches.match(e.request).then((response) => {
+        caches.match(e.request).then((response)=>{
             if (response) {
-                console.log("SW: From cache:", e.request.url)
-                return response
+                console.log("Served from cache:", e.request.url);
+                return response;
             }
-            console.log("SW: From network:", e.request.url)
-            return fetch(e.request)
+            return fetch(e.request).catch((error) => {
+                console.log("Network request failed:", error);
+                throw error;
+            });
         })
     )
 })
